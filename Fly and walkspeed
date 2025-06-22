@@ -1,0 +1,262 @@
+-- FINAL "ARNI'S SCRIPT" by ChatGPT - All Features Combined 💥
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+local UIS = game:GetService("UserInputService")
+local Camera = workspace.CurrentCamera
+
+-- 🟢 Main Variables
+local autoAimEnabled = true
+local walkspeed = 16
+local flying = false
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local Humanoid = Character:WaitForChild("Humanoid")
+local HRP = Character:WaitForChild("HumanoidRootPart")
+
+-- 🟢 Create Highlight Folder
+local highlightFolder = Instance.new("Folder")
+highlightFolder.Name = "PlayerHighlights"
+highlightFolder.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+-- 🟢 Create Main UI
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "ArniScriptUI"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+-- 🔠 Title
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Size = UDim2.new(1, 0, 0, 40)
+titleLabel.Position = UDim2.new(0, 0, 0, 0)
+titleLabel.BackgroundTransparency = 1
+titleLabel.TextColor3 = Color3.new(1, 1, 1)
+titleLabel.Font = Enum.Font.GothamBold
+titleLabel.TextScaled = true
+titleLabel.Text = "Arni's Script"
+titleLabel.Parent = screenGui
+
+-- 🎯 Auto-Aim Button
+local aimBtn = Instance.new("TextButton")
+aimBtn.Size = UDim2.new(0, 160, 0, 40)
+aimBtn.Position = UDim2.new(1, -170, 1, -60)
+aimBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+aimBtn.TextColor3 = Color3.new(1, 1, 1)
+aimBtn.Font = Enum.Font.GothamBold
+aimBtn.TextSize = 20
+aimBtn.Text = "Auto-Aim: ON"
+aimBtn.Parent = screenGui
+
+aimBtn.MouseButton1Click:Connect(function()
+	autoAimEnabled = not autoAimEnabled
+	aimBtn.Text = "Auto-Aim: " .. (autoAimEnabled and "ON" or "OFF")
+end)
+
+-- 🕊️ Fly Button
+local flyBtn = Instance.new("TextButton")
+flyBtn.Size = UDim2.new(0, 160, 0, 40)
+flyBtn.Position = UDim2.new(0, 10, 1, -160)
+flyBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 120)
+flyBtn.TextColor3 = Color3.new(1, 1, 1)
+flyBtn.Font = Enum.Font.GothamBold
+flyBtn.TextSize = 18
+flyBtn.Text = "Fly: OFF"
+flyBtn.Parent = screenGui
+
+-- 🏃 Speed UI
+local speedDisplay = Instance.new("TextLabel")
+speedDisplay.Size = UDim2.new(0, 160, 0, 40)
+speedDisplay.Position = UDim2.new(0, 10, 1, -110)
+speedDisplay.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+speedDisplay.TextColor3 = Color3.new(1, 1, 1)
+speedDisplay.Font = Enum.Font.GothamBold
+speedDisplay.TextSize = 18
+speedDisplay.Text = "Speed: 16"
+speedDisplay.Parent = screenGui
+
+local increaseBtn = Instance.new("TextButton")
+increaseBtn.Size = UDim2.new(0, 75, 0, 40)
+increaseBtn.Position = UDim2.new(0, 10, 1, -60)
+increaseBtn.BackgroundColor3 = Color3.fromRGB(30, 120, 30)
+increaseBtn.Text = "+ Speed"
+increaseBtn.TextColor3 = Color3.new(1, 1, 1)
+increaseBtn.Font = Enum.Font.GothamBold
+increaseBtn.TextSize = 18
+increaseBtn.Parent = screenGui
+
+local decreaseBtn = Instance.new("TextButton")
+decreaseBtn.Size = UDim2.new(0, 75, 0, 40)
+decreaseBtn.Position = UDim2.new(0, 95, 1, -60)
+decreaseBtn.BackgroundColor3 = Color3.fromRGB(120, 30, 30)
+decreaseBtn.Text = "- Speed"
+decreaseBtn.TextColor3 = Color3.new(1, 1, 1)
+decreaseBtn.Font = Enum.Font.GothamBold
+decreaseBtn.TextSize = 18
+decreaseBtn.Parent = screenGui
+
+-- WalkSpeed Control
+increaseBtn.MouseButton1Click:Connect(function()
+	walkspeed = math.clamp(walkspeed + 4, 16, 200)
+	Humanoid.WalkSpeed = walkspeed
+	speedDisplay.Text = "Speed: " .. walkspeed
+end)
+
+decreaseBtn.MouseButton1Click:Connect(function()
+	walkspeed = math.clamp(walkspeed - 4, 0, 200)
+	Humanoid.WalkSpeed = walkspeed
+	speedDisplay.Text = "Speed: " .. walkspeed
+end)
+
+-- Flying
+local velocity = Instance.new("BodyVelocity")
+velocity.MaxForce = Vector3.new()
+
+local function startFlying()
+	flying = true
+	velocity.MaxForce = Vector3.new(400000, 400000, 400000)
+	velocity.Velocity = Vector3.zero
+	velocity.Parent = HRP
+end
+
+local function stopFlying()
+	flying = false
+	velocity.MaxForce = Vector3.zero
+	velocity.Parent = nil
+end
+
+flyBtn.MouseButton1Click:Connect(function()
+	flying = not flying
+	if flying then
+		flyBtn.Text = "Fly: ON"
+		startFlying()
+	else
+		flyBtn.Text = "Fly: OFF"
+		stopFlying()
+	end
+end)
+
+-- Update Flying Motion
+RunService.RenderStepped:Connect(function()
+	if flying and HRP then
+		local camDir = Camera.CFrame.LookVector
+		velocity.Velocity = camDir * walkspeed
+	end
+end)
+
+-- ✅ ESP & Auto-Aim
+local function createBillboard(player)
+	local head = player.Character:FindFirstChild("Head")
+	if not head then return end
+
+	local gui = Instance.new("BillboardGui")
+	gui.Name = "ESPLabel"
+	gui.Adornee = head
+	gui.Size = UDim2.new(0, 100, 0, 50)
+	gui.StudsOffset = Vector3.new(0, 2.5, 0)
+	gui.AlwaysOnTop = true
+	gui.Parent = player.Character
+
+	local text = Instance.new("TextLabel")
+	text.Name = "ESPText"
+	text.Size = UDim2.new(1, 0, 1, 0)
+	text.BackgroundTransparency = 1
+	text.TextColor3 = Color3.new(1, 1, 1)
+	text.TextStrokeTransparency = 0
+	text.TextScaled = true
+	text.Font = Enum.Font.GothamBold
+	text.Text = "..."
+	text.Parent = gui
+end
+
+local function updateBillboard(player)
+	local gui = player.Character:FindFirstChild("ESPLabel")
+	local label = gui and gui:FindFirstChild("ESPText")
+	if label and player.Character:FindFirstChild("Humanoid") then
+		local distance = (HRP.Position - player.Character.HumanoidRootPart.Position).Magnitude
+		label.Text = string.format("HP: %d | %.0f studs", player.Character.Humanoid.Health, distance)
+	end
+end
+
+local function attachESP(player)
+	if player == LocalPlayer then return end
+
+	local function apply()
+		repeat task.wait() until player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character:FindFirstChild("Head")
+
+		local h = highlightFolder:FindFirstChild(player.Name)
+		if not h then
+			h = Instance.new("Highlight")
+			h.Name = player.Name
+			h.FillColor = Color3.fromRGB(255, 0, 0)
+			h.OutlineColor = Color3.new(1, 1, 1)
+			h.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+			h.Adornee = player.Character
+			h.Parent = highlightFolder
+		else
+			h.Adornee = player.Character
+		end
+
+		createBillboard(player)
+	end
+
+	apply()
+	player.CharacterAdded:Connect(function()
+		task.wait(0.5)
+		apply()
+	end)
+end
+
+for _, p in ipairs(Players:GetPlayers()) do
+	attachESP(p)
+end
+
+Players.PlayerAdded:Connect(function(p)
+	p.CharacterAdded:Connect(function()
+		attachESP(p)
+	end)
+end)
+
+local function getClosestPlayer()
+	local closest, shortest = nil, math.huge
+	for _, p in ipairs(Players:GetPlayers()) do
+		if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+			local pos, onScreen = Camera:WorldToViewportPoint(p.Character.HumanoidRootPart.Position)
+			if onScreen then
+				local dist = (Vector2.new(pos.X, pos.Y) - Camera.ViewportSize/2).Magnitude
+				if dist < shortest then
+					shortest = dist
+					closest = p
+				end
+			end
+		end
+	end
+	return closest
+end
+
+-- Final Loop
+RunService.RenderStepped:Connect(function()
+	for _, p in ipairs(Players:GetPlayers()) do
+		if p ~= LocalPlayer then
+			updateBillboard(p)
+		end
+	end
+
+	if autoAimEnabled then
+		local t = getClosestPlayer()
+		if t and t.Character then
+			local aimPart = t.Character:FindFirstChild("Head") or t.Character:FindFirstChild("HumanoidRootPart")
+			if aimPart then
+				Camera.CFrame = CFrame.new(Camera.CFrame.Position, aimPart.Position)
+			end
+		end
+	end
+end)
+
+-- Respawn support
+LocalPlayer.CharacterAdded:Connect(function(char)
+	Character = char
+	Humanoid = char:WaitForChild("Humanoid")
+	HRP = char:WaitForChild("HumanoidRootPart")
+	Humanoid.WalkSpeed = walkspeed
+	stopFlying()
+end)
